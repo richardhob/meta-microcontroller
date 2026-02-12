@@ -199,3 +199,32 @@ How Annoying. Let's find all the files with this issue:
 ```
 
 Easy fix.
+
+# Error in avr-libc
+
+Configuration error:
+
+```
+...
+| NOTE: /tools/bitbake-builds/poky-whinlatter/build/tmp/work/all-poky-linux/avr-libc/2.1.0+git/sources/avr-libc-2.1.0+git/config.log
+| ERROR: configure failed
+| WARNING: exit code 1 from a shell command.
+ERROR: Task (/tools/bitbake-builds/poky-whinlatter/layers/meta-microcontroller/recipes-avr/avr-libc/avr-libc.bb:do_configure) failed with exit code '1'
+```
+
+Full log cached in docs/avr-libc.log
+
+Topic of interest for this issue - could be related to a GCC script?
+
+    https://bbs.archlinux.org/viewtopic.php?id=266711
+
+Good stuff happening here:
+
+```
+configure:5696: gcc none --sysroot=/tools/bitbake-builds/poky-whinlatter/build/tmp/work/all-poky-linux/avr-libc/2.1.0+git/recipe-sysroot -c   conftest.c >&5
+gcc: warning: none: linker input file unused because linking not done
+gcc: error: none: linker input file not found: No such file or directory
+```
+
+hmmm maybe we need a dev shell and to take a look at `configure` directly? That
+`none` is pretty suspicious.
