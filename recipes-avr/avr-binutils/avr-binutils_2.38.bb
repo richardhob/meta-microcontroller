@@ -21,7 +21,14 @@ SRC_URI = " \
 "
 SRC_URI[sha256sum] = "e316477a914f567eccc34d5d29785b8b0f5a10208d36bbacedcc39048ecfe024"
 
-S = "${WORKDIR}/binutils-${PV}"
+# ERROR: avr-binutils-native-2.38-r0 do_unpack: S should be set relative to UNPACKDIR, e.g. replace WORKDIR with UNPACKDIR in "S = ${WORKDIR}/binutils-${PV}"
+#
+# From this file:
+# 
+# S = "${WORKDIR}/binutils-${PV}"
+# 
+# Changed in 5.1 styhead - https://docs.yoctoproject.org/next/migration-guides/migration-5.1.html 
+S = "${UNPACKDIR}/binutils-${PV}"
 
 BBCLASSEXTEND = "native"
 
