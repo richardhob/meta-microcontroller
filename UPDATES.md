@@ -183,3 +183,19 @@ S = "${UNPACKDIR}/gcc-${PV}"
 ```
 
 This applies to most of the others above as well.
+
+# Warning while building avr-binutils
+
+```bash
+WARNING: /tools/bitbake-builds/poky-whinlatter/layers/meta-microcontroller/recipes-avr/avr-binutils/avr-binutils_2.38.bb:13 has a lack of whitespace around the assignment: 'LIC_FILES_CHKSUM="    file://COPYING;md5=59530bdf33659b29e73d4adb9f9f6552    file://COPYING.LIB;md5=9f604d8a4f8e74f4f5140845a21b6674    file://COPYING3;md5=d32239bcb673463ab874e80d47fae504    file://COPYING3.LIB;md5=6a6a8e020838b23406c81b19c1d46df6    file://gas/COPYING;md5=d32239bcb673463ab874e80d47fae504    file://include/COPYING;md5=59530bdf33659b29e73d4adb9f9f6552    file://include/COPYING3;md5=d32239bcb673463ab874e80d47fae504    file://libiberty/COPYING.LIB;md5=a916467b91076e631dd8edb7424769c7    file://bfd/COPYING;md5=d32239bcb673463ab874e80d47fae504"'
+```
+
+How Annoying. Let's find all the files with this issue:
+
+```bash
+> find . -name *.bb -o -name *.inc -o -name *.bbclass | grep "^LIC_FILES_CHKSUM=\""
+./recipes-avr/avr-binutils/avr-binutils_2.38.bb:LIC_FILES_CHKSUM="\
+./recipes-arm-none-eabi/arm-none-eabi-binutils/arm-none-eabi-binutils_2.38.bb:LIC_FILES_CHKSUM="\
+```
+
+Easy fix.
