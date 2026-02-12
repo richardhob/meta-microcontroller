@@ -15,7 +15,6 @@ SRC_URI = "git://github.com/oneapi-src/oneTBB.git;protocol=https;branch=${BRANCH
            file://tbb.pc \
 "
 
-S = "${WORKDIR}/git"
 PE = "1"
 
 COMPILER ?= "gcc"

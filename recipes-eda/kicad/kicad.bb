@@ -33,7 +33,6 @@ SRC_URI = " \
 "
 SRCREV = "e4df76d986c70b7c06bc734644245984b7bb78ba"
 PV = "5.1.12"
-S = "${WORKDIR}/git"
 
 # TODO
 # spice: ngspice

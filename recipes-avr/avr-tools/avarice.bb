@@ -14,7 +14,6 @@ DEPENDS = " \
 
 SRC_URI = "git://github.com/avrdudes/avarice.git;protocol=https;branch=main"
 SRCREV = "5a125cdd403cf8b7d758a363f75e4e492d15e5ee"
-S = "${WORKDIR}/git"
 PV = "2.14+git${SRCPV}"
 
 CXXFLAGS += "-std=c++11"

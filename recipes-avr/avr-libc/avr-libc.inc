@@ -24,7 +24,6 @@ SRC_URI = " \
     file://0001-Change-python-shebangs-to-python3.patch \
 "
 SRCREV = "55e8cac69935657bcd3e4d938750960c757844c3"
-S = "${WORKDIR}/git"
 
 do_configure:prepend() {
     cd ${S}

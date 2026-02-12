@@ -34,7 +34,7 @@ SRC_URI = " \
 "
 SRC_URI[sha256sum] = "e30a6e52d10e1f27ed55104ad233c30bd1e99cfb5ff98ab022dc941edd1b2dd4"
 
-S = "${WORKDIR}/gcc-${PV}"
+S = "${UNPACKDIR}/gcc-${PV}"
 
 EXTRA_OECONF = " \
     --target=avr \

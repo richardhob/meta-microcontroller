@@ -5,7 +5,6 @@ inherit pkgconfig python3native
 
 SRC_URI = "gitsm://github.com/micropython/micropython.git;protocol=https;branch=master"
 SRCREV = "da4b38e7562dfa451917f9d7f344a7f26de8c7bd"
-S = "${WORKDIR}/git"
 PV = "1.18"
 
 EXTRA_OEMAKE = " \

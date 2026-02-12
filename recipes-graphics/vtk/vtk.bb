@@ -15,7 +15,7 @@ SRC_URI = " \
 SRC_URI[sha256sum] = "8fed42f4f8f1eb8083107b68eaa9ad71da07110161a3116ad807f43e5ca5ce96"
 PV = "9.1.0"
 LIBEXT = "9.1"
-S = "${WORKDIR}/VTK-${PV}"
+S = "${UNPACKDIR}/VTK-${PV}"
 
 # TODO
 # * meta-oe libharu -> 2.4.0

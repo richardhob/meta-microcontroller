@@ -8,7 +8,6 @@ inherit setuptools3
 PV = "4.0.0~b3"
 SRC_URI = "git://github.com/thonny/thonny.git;branch=master;protocol=https"
 SRCREV = "c1c4ac05a808641bbb22dd96e6d6487223f00250"
-S = "${WORKDIR}/git"
 
 RDEPENDS:${PN} = " \
     python3-jedi \

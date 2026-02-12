@@ -8,7 +8,6 @@ inherit avr-toolchain
 
 SRC_URI = "git://github.com/schnitzeltony/old-avr-projects.git;protocol=https;branch=master"
 SRCREV = "d4ef6d6a476cd821bfc07ea7feecabe2820b2ffc"
-S = "${WORKDIR}/git"
 PV = "0.0.0"
 
 do_compile() {
