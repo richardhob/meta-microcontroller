@@ -5,7 +5,14 @@ SECTION = "devel"
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=8d91a8f153d3de715f67a5df0d841c43"
 
+# We are cross compiling LIBC for AVR. We _should_ only need to specify the host
+# and the build.
+#
+# We can build natively right?
 HOST_SYS = "avr"
+HOST_AS_ARCH = ""
+HOST_CC_ARCH = ""
+HOST_LD_ARCH = ""
 
 inherit avr-toolchain-base autotools-brokensep gettext texinfo
 
@@ -16,6 +23,8 @@ DEPENDS = " \
     mpfr-native \
     libmpc-native \
     flex-native \
+    avr-binutils \
+    avr-gcc \
 "
 
 PV = "2.1.0+git${SRCPV}"

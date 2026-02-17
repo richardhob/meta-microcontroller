@@ -228,3 +228,52 @@ gcc: error: none: linker input file not found: No such file or directory
 
 hmmm maybe we need a dev shell and to take a look at `configure` directly? That
 `none` is pretty suspicious.
+
+`do_configure` calls `devtools/get-avr-lib-tree.sh` first, so let's try that:
+
+```bash
+> ./devtools/get-avr-lib-tree.sh
+> ./configure?
+```
+
+That doesn't work ... 
+
+Looking at the build environment - there are a LOT of references to `none`:
+
+```
+> env | grep none
+CPP=gcc -E --sysroot=/tools/bitbake-builds/poky-whinlatter/build/tmp/work/all-poky-linux/avr-libc/2.1.0+git/recipe-sysroot none
+CXX=g++ none --sysroot=/tools/bitbake-builds/poky-whinlatter/build/tmp/work/all-poky-linux/avr-libc/2.1.0+git/recipe-sysroot
+CCLD=gcc none --sysroot=/tools/bitbake-builds/poky-whinlatter/build/tmp/work/all-poky-linux/avr-libc/2.1.0+git/recipe-sysroot
+LD=ld --sysroot=/tools/bitbake-builds/poky-whinlatter/build/tmp/work/all-poky-linux/avr-libc/2.1.0+git/recipe-sysroot none
+AS=as none
+FC=gfortran none --sysroot=/tools/bitbake-builds/poky-whinlatter/build/tmp/work/all-poky-linux/avr-libc/2.1.0+git/recipe-sysroot
+CC=gcc none --sysroot=/tools/bitbake-builds/poky-whinlatter/build/tmp/work/all-poky-linux/avr-libc/2.1.0+git/recipe-sysroot
+```
+
+This definitely doesn't look right. We should be cross compiling right? So
+what's going on here.
+
+OH! OK SO `CPP` does NOT have a `none` in it - I wonder if the CFLAGS and others
+need defined, otherwise they become "none".
+
+Adding the following to the avr libc include:
+
+```
+HOST_AS_ARCH = ""
+HOST_CC_ARCH = ""
+HOST_LD_ARCH = ""
+```
+
+This gets us to the next error:
+
+```bash
+| configure: error: Wrong C compiler found; check the PATH!
+| NOTE: The following config.log files may provide further information.
+| NOTE: /tools/bitbake-builds/poky-whinlatter/build/tmp/work/all-poky-linux/avr-libc/2.1.0+git/sources/avr-libc-2.1.0+git/config.log
+| ERROR: configure failed
+```
+
+OK So NOW we're configured for the wrong GCC. I think we need to depend on
+avr-gcc in order for this to work? And we may need to set HOSTTOOLS perhaps to
+get the environment correct.
