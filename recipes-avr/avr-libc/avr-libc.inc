@@ -15,7 +15,6 @@ TARGET_SYS = "avr"
 TARGET_AS_ARCH = ""
 TARGET_CC_ARCH = ""
 TARGET_LD_ARCH = ""
-+
 
 inherit avr-toolchain-base autotools-brokensep gettext texinfo
 
