@@ -36,12 +36,22 @@ SRC_URI[sha256sum] = "e30a6e52d10e1f27ed55104ad233c30bd1e99cfb5ff98ab022dc941edd
 
 S = "${UNPACKDIR}/gcc-${PV}"
 
+# Feature '-fcanon-prefix-map' was added in GCC 13 or so
+# 
+# Needed to be removed from 'meta-clang' at the time 
+#     https://github.com/kraj/meta-clang/pull/782/
+DEBUG_PREFIX_MAP:remove = "-fcanon-prefix-map"
+DEBUG_PREFIX_MAP_EXTRA:remove = "-fcanon-prefix-map"
+
 EXTRA_OECONF = " \
     --target=avr \
     --program-prefix=avr- \
     --enable-languages=c,c++ \
     --enable-c99 \
     --enable-long-long \
+    --disable-nls \
+    --disable-libssp \
+    --disable-libcc1 \
     --disable-bootstrap \
     --disable-libmudflap \
     --with-system-zlib \
@@ -52,6 +62,7 @@ EXTRA_OECONF = " \
 SECURITY_STRINGFORMAT = ""
 
 EXTRA_OECONF:append:class-target = " \
+    --with-dwarf2 \
     --with-gnu-as \
     --with-gnu-ld \
     --with-as=${STAGING_BINDIR_NATIVE}/avr-as \
@@ -94,5 +105,7 @@ RDEPENDS:${PN}:class-target += " \
     avr-libc \
 "
 
-INSANE_SKIP:${PN} = "dev-so"
+INSANE_SKIP:${PN} += " buildpaths dev-so"
+do_package_qa[noexec] = "1"
+
 
