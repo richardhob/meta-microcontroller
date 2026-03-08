@@ -11,6 +11,8 @@ SRCREV = "d4ef6d6a476cd821bfc07ea7feecabe2820b2ffc"
 PV = "0.0.0"
 
 do_compile() {
+    avr_env
+
     cd ${S}/j-ramp/src
     base_do_compile
 

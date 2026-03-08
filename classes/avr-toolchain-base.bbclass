@@ -22,3 +22,23 @@ export READELF = "avr-readelf"
 export STRINGS = "avr-strings"
 export STRIP = "avr-strip"
 
+avr_env() {
+    AR="avr-ar"
+    AS="avr-as"
+    CC="avr-gcc --sysroot=${STAGING_DIR_NATIVE}"
+    CXX="avr-g++ --sysroot=${STAGING_DIR_NATIVE}"
+    CFLAGS=""
+    CXXFLAGS=""
+    CPPFLAGS=""
+    LDFLAGS=""
+    LD="avr-ld --sysroot=${STAGING_DIR_NATIVE}"
+    NM="avr-nm"
+    OBJCOPY="avr-objcopy"
+    OBJDUMP="avr-objdump"
+    RANLIB="avr-ranlib"
+    READELF="avr-readelf"
+    STRINGS="avr-strings"
+    STRIP="avr-strip"
+}
+
+EXPORT_FUNCTIONS avr_env
