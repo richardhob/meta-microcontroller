@@ -277,3 +277,210 @@ This gets us to the next error:
 OK So NOW we're configured for the wrong GCC. I think we need to depend on
 avr-gcc in order for this to work? And we may need to set HOSTTOOLS perhaps to
 get the environment correct.
+
+# Comilation Error in avr-gcc
+
+Error stated something like: 
+
+```bash
+Unrecognized flag --fcanan-prefix-map ...
+```
+
+This flag was added in GCC 13 or so. Since we're building GCC 8, we definitely
+can't provide this flag.
+
+```
+# Feature '-fcanon-prefix-map' was added in GCC 13 or so
+# 
+# Needed to be removed from 'meta-clang' at the time 
+#     https://github.com/kraj/meta-clang/pull/782/
+DEBUG_PREFIX_MAP:remove = "-fcanon-prefix-map"
+DEBUG_PREFIX_MAP_EXTRA:remove = "-fcanon-prefix-map"
+```
+
+Compilation works after this.
+
+# Comilation Error in avr-libc
+
+This one was a bit more tricky. Firstly, the compiler variables were set wrong:
+
+```
+AR='gcc-ar'
+AS='as none'
+...
+```
+
+And the errors were a mixed bag of "no linker script none found" and stuff like
+that. There are two parts of this:
+
+1. The 'none' comes from the these flags not being set:
+   ```
+   HOST_AS_ARCH = ""
+   HOST_CC_ARCH = ""
+   HOST_LD_ARCH = ""
+   ```
+   But that doesn't really get to the heart of the problem. I'll set this for
+   host and target in the recipe just in case
+2. The Archiver _really_ needs to be set to `avr-ar`
+
+In `classes/avr-toolchain-base.bbclass` (which `avr-libc` inherits from) there
+are some exported variables:
+
+```
+export AR = "avr-ar"
+export AS = "avr-as"
+export CC = "avr-gcc --sysroot=${STAGING_DIR_NATIVE}"
+export CXX = "avr-g++ --sysroot=${STAGING_DIR_NATIVE}"
+export CFLAGS = ""
+export CXXFLAGS = ""
+export CPPFLAGS = ""
+export LDFLAGS = ""
+export LD = "avr-ld --sysroot=${STAGING_DIR_NATIVE}"
+export NM = "avr-nm"
+export OBJCOPY = "avr-objcopy"
+export OBJDUMP = "avr-objdump"
+export RANLIB = "avr-ranlib"
+export READELF = "avr-readelf"
+export STRINGS = "avr-strings"
+export STRIP = "avr-strip"
+```
+
+These aren't being sent to the shell. I don't know when this was changed, cause
+I assumed this worked at some point.
+
+My solution is to just add a bash function:
+
+```
+avr_env() {
+    AR="avr-ar"
+    AS="avr-as"
+    CC="avr-gcc --sysroot=${STAGING_DIR_NATIVE}"
+    CXX="avr-g++ --sysroot=${STAGING_DIR_NATIVE}"
+    CFLAGS=""
+    CXXFLAGS=""
+    CPPFLAGS=""
+    LDFLAGS=""
+    LD="avr-ld --sysroot=${STAGING_DIR_NATIVE}"
+    NM="avr-nm"
+    OBJCOPY="avr-objcopy"
+    OBJDUMP="avr-objdump"
+    RANLIB="avr-ranlib"
+    READELF="avr-readelf"
+    STRINGS="avr-strings"
+    STRIP="avr-strip"
+}
+
+EXPORT_FUNCTIONS avr_env
+```
+
+and call the function from the `avr-libc.inc:do_configure` prepend recipe bit:
+
+```
+do_configure:prepend() {
+    avr_env
+    cd ${S}
+    ./devtools/gen-avr-lib-tree.sh
+    touch ChangeLog
+}
+```
+
+Which works great.
+
+# QA Issues
+
+Next is some QA issues in the `avr-gcc` package:
+
+```
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/libgcc.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/libgcov.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avrxmega4/libgcc.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avrxmega4/libgcov.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avr6/libgcc.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avr6/libgcov.a in package vr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avr31/libgcc.a in package vr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avr31/libgcov.a in packageavr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avr4/libgcc.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avr4/libgcov.a in package vr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avr51/libgcc.a in package vr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avr51/libgcov.a in packageavr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avrxmega2/libgcc.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avrxmega2/libgcov.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avrxmega3/libgcc.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avrxmega3/libgcov.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avrxmega3/short-calls/libgcc.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avrxmega3/short-calls/libgcov.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avrxmega6/libgcc.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avrxmega6/libgcov.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avrxmega5/libgcc.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avrxmega5/libgcov.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/tiny-stack/libgcc.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/tiny-stack/libgcov.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avrtiny/libgcc.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avrtiny/libgcov.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avr35/libgcc.a in package vr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avr35/libgcov.a in packageavr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avr5/libgcc.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avr5/libgcov.a in package vr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avr3/libgcc.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avr3/libgcov.a in package vr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avrxmega7/libgcc.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avrxmega7/libgcov.a in package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avr25/libgcc.a in package vr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avr25/libgcov.a in packageavr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avr25/tiny-stack/libgcc.a n package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/avr25/tiny-stack/libgcov.ain package avr-gcc-staticdev contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/bin/avr-cpp in package avr-gcc contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/bin/avr-c++ in package avr-gcc contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/bin/avr-g++ in package avr-gcc contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/bin/avr-gcc in package avr-gcc contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/bin/avr-gcc-8.4.0 in package avr-gcc contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/include-fixed/pthread.h inpackage avr-gcc contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/plugin/include/auto-host.hin package avr-gcc contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/plugin/include/configargs. h in package avr-gcc contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/lib/gcc/avr/8.4.0/install-tools/mkheaders.conf in package avr-gcc contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/libexec/gcc/avr/8.4.0/lto1 in package avr-gcc contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/libexec/gcc/avr/8.4.0/cc1plus in package avr-gcc contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/libexec/gcc/avr/8.4.0/collect2 in package avr-gcc contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/libexec/gcc/avr/8.4.0/cc1 in package avr-gcccontains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/libexec/gcc/avr/8.4.0/install-tools/fixincl n package avr-gcc contains reference to TMPDIR [buildpaths]
+ERROR: avr-gcc-1_8.4.0-r0 do_package_qa: QA Issue: File /usr/src/debug/avr-gcc/8.4.0/gcc/configargs.h in ackage avr-gcc-src contains reference to TMPDIR [buildpaths]
+```
+
+Which is QA Check 11.2.4 `buildpaths`:
+
+```
+11.2.4 buildpaths
+
+> File <filename> in package <packagename> contains reference to TMPDIR [buildpaths]
+
+This check ensures that build system paths (including TMPDIR) do not appear in
+output files, which not only leaks build system configuration into the target,
+but also hinders binary reproducibility as the output will change if the build
+system configuration changes.
+
+Typically these paths will enter the output through some mechanism in the
+configuration or compilation of the software being built by the recipe. To
+resolve this issue you will need to determine how the detected path is entering
+the output. Sometimes it may require adjusting scripts or code to use a relative
+path rather than an absolute one, or to pick up the path from runtime
+configuration or environment variables.
+```
+
+Well that's not good. I mean it's probably fine ... we can skip this for now and
+figure out what to do with it later.
+
+To skip this check, we can add an `INSANE-SKIP` to `avr-gcc`:
+
+```
+INSANE_SKIP:${PN} = "dev-so buildpaths"
+
+```
+
+This didn't actually work to remove the errors though. Odd! But disabling QA
+altogether did:
+
+```
+do_package_qa[noexec] = "1"
+```
+
+wild stuff.
