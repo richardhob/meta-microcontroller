@@ -9,5 +9,5 @@ PV = "0.1"
 
 do_install () {
     install -d ${D}${sysconfdir}/udev/rules.d
-    install -m 0644 ${WORKDIR}/60-avr-dev-devices.rules ${D}${sysconfdir}/udev/rules.d/
+    install -m 0644 ${WORKDIR}/sources/60-avr-dev-devices.rules ${D}${sysconfdir}/udev/rules.d/
 }

@@ -484,3 +484,40 @@ do_package_qa[noexec] = "1"
 ```
 
 wild stuff.
+
+# avr-dev-rules
+
+This is required for avrdude (aka the Arduino programmer)
+
+```
+ERROR: avr-udev-rules-0.1-r0 do_install: Execution of '/tools/bitbake-builds/poky-whinlatter/build/tmp/work/all-poky-linux/avr-udev-rules/0.1/temp/run.do_install.2471775' failed with exit code 1
+ERROR: Logfile of failure stored in: /tools/bitbake-builds/poky-whinlatter/build/tmp/work/all-poky-linux/avr-udev-rules/0.1/temp/log.do_install.2471775
+Log data follows:
+| DEBUG: Executing python function extend_recipe_sysroot
+| NOTE: Direct dependencies are ['/tools/bitbake-builds/poky-whinlatter/layers/openembedded-core/meta/recipes-devtools/quilt/quilt-native_0.69.bb:do_populate_sysroot', 'virtual:native:/tools/bitbake-builds/poky-whinlatter/layers/openembedded-core/meta/recipes-devtools/patch/patch_2.8.bb:do_populate_sysroot', 'virtual:native:/tools/bitbake-builds/poky-whinlatter/layers/openembedded-core/meta/recipes-devtools/pseudo/pseudo_git.bb:do_populate_sysroot']
+| NOTE: Installed into sysroot: []
+| NOTE: Skipping as already exists in sysroot: ['gettext-minimal-native', 'libtool-native', 'quilt-native', 'texinfo-dummy-native', 'patch-native', 'pseudo-native', 'xz-native', 'attr-native', 'sqlite3-native']
+| DEBUG: Python function extend_recipe_sysroot finished
+| DEBUG: Executing shell function do_install
+| install: cannot stat '/tools/bitbake-builds/poky-whinlatter/build/tmp/work/all-poky-linux/avr-udev-rules/0.1/60-avr-dev-devices.rules': No such file or directory
+| WARNING: exit code 1 from a shell command.
+ERROR: Task (/tools/bitbake-builds/poky-whinlatter/layers/meta-microcontroller/recipes-avr/avr-tools/avr-udev-rules.bb:do_install) failed with exit code '1'
+```
+
+Solution: change the install command a bit:
+
+```
+diff --git a/recipes-avr/avr-tools/avr-udev-rules.bb b/recipes-avr/avr-tools/avr-udev-rules.bb
+index 641adb4..03f66cb 100644
+--- a/recipes-avr/avr-tools/avr-udev-rules.bb
++++ b/recipes-avr/avr-tools/avr-udev-rules.bb
+@@ -9,5 +9,5 @@ PV = "0.1"
+
+ do_install () {
+     install -d ${D}${sysconfdir}/udev/rules.d
+-    install -m 0644 ${WORKDIR}/60-avr-dev-devices.rules ${D}${sysconfdir}/udev/rules.d/
++    install -m 0644 ${WORKDIR}/sources/60-avr-dev-devices.rules ${D}${sysconfdir}/udev/rules.d/
+ }
+```
+
+# avrdude
