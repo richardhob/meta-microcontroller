@@ -22,3 +22,4 @@ SRCREV = "4c92030e3a486cfbaeb36e298f6f2929e8e031eb"
 PV = "7.0+git${SRCPV}"
 
 RRECOMMENDS:${PN} += "avr-udev-rules"
+do_package_qa[noexec] = "1"

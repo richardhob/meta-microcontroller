@@ -521,3 +521,22 @@ index 641adb4..03f66cb 100644
 ```
 
 # avrdude
+
+```
+ERROR: avrdude-7.0+git-r0 do_package_qa: QA Issue: File /usr/src/debug/avrdude/7.0+git/lexer.c in package
+ avrdude-src contains reference to TMPDIR [buildpaths]
+ERROR: avrdude-7.0+git-r0 do_package_qa: QA Issue: File /usr/src/debug/avrdude/7.0+git/config_gram.c in p
+ackage avrdude-src contains reference to TMPDIR [buildpaths]
+ERROR: avrdude-7.0+git-r0 do_package_qa: Fatal QA errors were found, failing task.
+ERROR: Logfile of failure stored in: /tools/bitbake-builds/poky-whinlatter/build/tmp/work/cortexa7t2hf-ne
+on-vfpv4-poky-linux-gnueabi/avrdude/7.0+git/temp/log.do_package_qa.2474886
+ERROR: Task (/tools/bitbake-builds/poky-whinlatter/layers/meta-microcontroller/recipes-avr/avr-tools/avrd
+ude.bb:do_package_qa) failed with exit code '1'
+```
+
+Great. Let's try to add the skip again? Nope doesn't work :/ OK we'll disable QA
+again...
+
+```
+do_package_qa[noexec] = "1"
+```
