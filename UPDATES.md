@@ -540,3 +540,25 @@ again...
 ```
 do_package_qa[noexec] = "1"
 ```
+
+Another error popped up, in which the compiler couldn't find "readline/readline"
+when compiling. 
+
+Solution was simple: add `readline` to the Yocto dependencies:
+
+```
+DEPENDS = " \
+    bison-native \
+    flex \
+    elfutils \
+    libusb1 \
+    libftdi \
+    readline \
+    hidapi \
+"
+```
+
+Done.
+
+# avr-gdb
+

@@ -14,6 +14,7 @@ DEPENDS = " \
     elfutils \
     libusb1 \
     libftdi \
+    readline \
     hidapi \
 "
 
