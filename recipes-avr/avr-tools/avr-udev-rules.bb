@@ -7,7 +7,9 @@ inherit allarch
 SRC_URI = "file://60-avr-dev-devices.rules"
 PV = "0.1"
 
+S = "${UNPACKDIR}"
+
 do_install () {
     install -d ${D}${sysconfdir}/udev/rules.d
-    install -m 0644 ${S}/sources/60-avr-dev-devices.rules ${D}/${sysconfdir}/udev/rules.d/
+    install -m 0644 ${S}/60-avr-dev-devices.rules ${D}/${sysconfdir}/udev/rules.d/
 }
